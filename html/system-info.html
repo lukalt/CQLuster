@@ -1,0 +1,32 @@
+<h2>System information</h2>
+
+<h3>CQLuster Version</h3>
+<p id="cqluster-version">?</p>
+<h3>Cluster Name</h3>
+<p id="cluster-name">?</p>
+<h3>Hosts (<span id="host-count">?</span>)</h3>
+<ul id="host-list">
+
+</ul>
+<p>
+    <a href="/system">Back to system overview</a>
+</p>
+<script>
+    $(document).ready(function () {
+       $.getJSON("/api/system/info", function (data) {
+            var d = data.data;
+            $("#cluster-name").text(d.name);
+            $("#cqluster-version").text(d.version);
+            $("#host-count").text(d.hosts.length);
+            d.hosts.forEach(function (t) {
+                $("#host-list").append("<li>Rack: " + t.rack +
+                    "<br/>Datacenter: " + t.datacenter +
+                    "<br/>Address: " + t.listenAddress +
+                    "<br/>Broadcast Address " + t.broadcastAddress +
+                    "<br/>State: " + t.state +
+                    "<br/>Cassandra Version: " + t.version +
+                    "</li>");
+            });
+       });
+    });
+</script>

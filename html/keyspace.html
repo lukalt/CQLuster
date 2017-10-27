@@ -1,0 +1,81 @@
+<h1>Keyspace {{#KEYSPACE_NAME}}</h1>
+
+<h2>Tables</h2>
+<p><a href="/create-table?keyspace={{#KEYSPACE_NAME}}" class="btn btn-primary" role="button">Create Table</a>
+    <a href="/query?keyspace={{#KEYSPACE_NAME}}" class="btn btn-primary" role="button">Execute Query</a></p>
+
+<table class="table table-striped table-bordered table-responsive">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Data</th>
+            <th>Structure</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+
+    </tbody>
+</table>
+
+<script>
+
+    var currentKeySpaceName = "{{#KEYSPACE_NAME}}";
+
+    function loadTableData() {
+        $.getJSON("/api/tables?keyspace={{#KEYSPACE_NAME}}", function(json) {
+            if(json.data === null) {
+                alert("This keyspace was not found");
+                self.location = "/";
+                return;
+            }
+            json.data.forEach(function (t) {
+                $("#table-body").append("<tr><th>" + t + "</th><td><a href=\"/table?keyspace=" + currentKeySpaceName + "&table=" + t + "\">Data</a></td>" +
+                    "<td><a href=\"/table?keyspace=" + currentKeySpaceName + "&table=" + t + "\">Struture</a></td>" +
+                    "<td><a href=\"javascript:deleteTable('" + currentKeySpaceName + "','" + t + "');\" style=\"btn btn-danger\"><i class=\"fa fa-times\" aria-hidden=\"true\"></i></a></td>" +
+                    "</tr>");
+            });
+        });
+    }
+
+    function deleteTable(keyspace,table) {
+        if(confirm("Do you really want to delete the table " + table + " of keyspace " + keyspace + "?")) {
+            $.getJSON("/api/query?keyspace=" + keyspace + "&query=" + encodeURI( "DROP TABLE " + keyspace + "." + table + ";" ), function (data) {
+                if(data.success) {
+                    $("#table-body").html("");
+                    loadTableData();
+                } else {
+                    alert("An error occured: " + data.data);
+                }
+            });
+        }
+    }
+
+    function executeQueryField(limit) {
+        var qv = $("#query-field");
+
+        if(qv.text() === "") {
+            qv.focus();
+            return;
+        }
+        qv.addClass("disabled");
+        executeQuery(limit,qv.text(),function(response) {
+            qv.removeClass("disabled");
+        });
+    }
+
+    function executeQuery(limit,query,callback) {
+        console.log("Executing query " + query);
+        $.getJSON("/api/query?keyspace=" + currentKeySpaceName + "&limit=" + limit + "&query=" + encodeURI(query), function (data) {
+            console.log("Response: " + data);
+            callback(data); // run callback
+        });
+    }
+
+
+    $(document).ready(function() {
+        loadTableData();
+    });
+
+
+</script>

@@ -1,0 +1,172 @@
+<h2>Create a new table</h2>
+<div class="alert alert-danger" id="error-alert" style="display:none">
+
+</div>
+<form id="form">
+    <div class="form-group">
+        <label for="keyspace">Keyspace:</label>
+        <select id="keyspace" class="form-control">
+
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="table-name">Name:</label>
+        <input type="text" required id="table-name" class="form-control" placeholder="Enter the name of the table"/>
+    </div>
+    <div class="form-group">
+        <table class="table" id="table" style="border: 0 !important;">
+            <tr>
+                <th>Column name</th>
+                <th>Column type</th>
+                <th>Index</th>
+            </tr>
+        </table>
+    </div>
+    <div class="form-group">
+        <p>
+            <a href="javascript:createTable();" class="btn btn-primary" id="create-button">Create Table</a>
+            <a href="javascript:addColumn();" style="float:right;min-width:15em;" class="btn btn-success">Add row</a>
+        </p>
+    </div>
+
+</form>
+
+<script>
+
+    var types = [
+        "int", "bigint", "varint", "tinyint", "smallint", "text", "double", "float", "ascii", "block", "boolean", "decimal", "inet", "timestamp", "timeuuid", "uuid", "varchar"
+    ];
+    var idCounter = 0;
+
+    var preSelectedKeyspace = "{{#SELECTED_KEYSPACE}}";
+
+    var fields = [];
+
+    $(document).ready(function () {
+        for (var i = 0; i < 3; i++) {
+            addColumn(idCounter);
+            idCounter++;
+        }
+        $.getJSON("/api/keyspaces", function (data) {
+            data.data.forEach(function (t) {
+                if (preSelectedKeyspace === t) {
+                    $("#keyspace").append("<option selected>" + t + "</option>");
+                } else {
+                    $("#keyspace").append("<option>" + t + "</option>");
+                }
+            });
+            $("#submit-button").removeClass("disabled");
+        });
+    });
+
+    function createTable() {
+        var a = createTableInternal();
+        if( a ) {
+            var ea = $("#error-alert");
+            ea.text(a);
+            ea.css("display","block");
+        }
+    }
+
+    function createTableInternal() {
+        console.log(fields);
+        var keyspace = $("#keyspace").val();
+        if(keyspace === "") {
+            return "Keyspace not specified";
+        }
+        var name = $("#table-name").val();
+        if(name === "") {
+            return "Table name is empty";
+        }
+
+        var cql = "CREATE TABLE " + keyspace + "." + name + " (";
+        var primary = [];
+        var partition = [];
+        var first = true;
+        fields.forEach(function (t) {
+            if( first ) {
+                first = false;
+            } else {
+                cql += ",";
+            }
+            var name = $("#tb-name-" + t).val();
+            var type = $("#tb-type-" + t).val();
+            if(name !== "" && type !== "") {
+                var index = $("#tb-index-" + t).val();
+                if(index === "2") {
+                    partition.push(name);
+                } else if(index === "1") {
+                    primary.push(name);
+                }
+                cql += name + " " + type;
+            }
+        });
+        cql += ", PRIMARY KEY((";
+        first = true;
+        partition.forEach(function (t) {
+           if(first) {
+               first = false;
+           } else {
+               cql += ",";
+           }
+           cql += t;
+        });
+        if(first) {
+            return "No partition key has been definied. Select at least one column";
+        }
+        if(primary.length > 0) {
+            cql += "),";
+            first = true;
+            primary.forEach(function (t) {
+                if(first) {
+                    first = false;
+                } else {
+                    cql += ",";
+                }
+                cql += t;
+            });
+        } else {
+            cql += ")";
+        }
+
+        cql += "));";
+        $("#create-button").addClass("disabled");
+        $.getJSON("/api/query?keyspace=" + keyspace + "&query=" + encodeURI(cql), function (data) {
+            $("#create-button").removeClass("disabled");
+            if(data.success) {
+                self.location = "/table?keyspace=" + keyspace + "&table=" + name; // success
+            } else {
+                console.log(data.data);
+                var ea = $("#error-alert");
+                ea.text(data.data);
+                ea.css("display","block");
+            }
+        });
+        return false;
+    }
+
+    function removeRow(id) {
+        $("#tb-row-" + id).remove();
+        for(var i = fields.length - 1; i >= 0; i--) {
+            if(fields[i] === id) {
+                fields.splice(i, 1);
+                break;
+            }
+        }
+    }
+
+    function addColumn(id) {
+        fields.push(id);
+        var typeOptions = "";
+        types.forEach(function (t) {
+            typeOptions += "<option>" + t + "</option>";
+        });
+        $("#table").append("<tr id='tb-row-" + id + "'><td><input type='text' class='form-control' id='tb-name-" + id + "' /></td>" +
+            "<td><select class='form-control' id='tb-type-" + id + "'>" + typeOptions + "</select></td>" +
+            "<td><select class='form-control' id='tb-index-" + id + "'><option value='2'>PARTITION</option><option value='1'>PRIMARY</option><option selected value='0'>NONE</option></select></td>" +
+            "<td><a href='javascript:removeRow(" + id + ");' class='btn btn-danger'><i class=\"fa fa-times\" aria-hidden=\"true\"></i></a></td>" +
+            "</tr>"
+        );
+    }
+
+</script>

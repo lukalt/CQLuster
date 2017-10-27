@@ -1,0 +1,37 @@
+
+<div class="alert alert-info" id="alert-no-keyspaces-found" style="display:none">
+    No keyspaces were found.
+</div>
+<table class="table table-striped table-responsive" id="table" style="display:none">
+    <tr>
+        <th>Keyspace</th>
+        <th>Column Families</th>
+        <th></th>
+        <th></th>
+    </tr>
+</table>
+<div id="loader">
+    <img src="//lukas81298.me/cdn/bap/35.gif" width="80" height="80" style="display:block; margin-left: auto; margin-right: auto; margin-top: 2em; "/>
+</div>
+<script>
+    $(document).ready(function() {
+       $.getJSON("/api/keyspaces?advanced=1",function(json) {
+           console.log(json);
+           var foundOne = false;
+           Object.keys(json.data).forEach(function (t) {
+               var tables = json.data[t];
+               $("#table").append("<tr><td>" + t + "</td><td>" + tables.length + "</td>" +
+                   "<td><a href=\"/keyspace?k=" + t + "\">View</a>" +
+                   "</td><td><a href=\"/keyspace?k=" + t + "&action=1\">Delete</a></td>" +
+                   "</tr>");
+               foundOne = true;
+           });
+          $("#loader").css("display","none");
+          if(foundOne) {
+              $("#table").css("display","block");
+          } else {
+              $("#table").css("alert-no-keyspaces-found","block");
+          }
+       });
+    });
+</script>

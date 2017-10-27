@@ -1,0 +1,92 @@
+<div class="alert alert-danger" id="error-alert" style="display:none">
+
+</div>
+<div class="alert alert-info" id="warning-alert" style="display:none">
+
+</div>
+<div id="query-window-wrapper">
+    <div class="form-group">
+        <label for="keyspace">Keyspace:</label>
+        <select id="keyspace" class="form-control" size="1">
+
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="query-input">Query:</label>
+        <textarea class="form-control" rows="5" placeholder="Enter your cql query here" id="query-input"></textarea>
+    </div>
+    <div class="form-group">
+        <a href="javascript:submit();" class="btn btn-primary disabled" id="submit-button">Execute Query</a>
+    </div>
+</div>
+
+<div id="query-result" style="display:none">
+    <table class="table table-striped table-bordered table-responsive">
+        <thead id="table-head">
+
+        </thead>
+        <tbody id="table-body">
+
+        </tbody>
+    </table>
+</div>
+
+<script>
+
+    var preSelectedKeyspace = "{{#SELECTED_KEYSPACE}}";
+
+    $(document).ready(function () {
+       $.getJSON("/api/keyspaces", function (data) {
+          data.data.forEach(function (t) {
+              if(preSelectedKeyspace === t) {
+                  $("#keyspace").append("<option selected>" + t + "</option>");
+              } else {
+                  $("#keyspace").append("<option>" + t + "</option>");
+              }
+          });
+           $("#submit-button").removeClass("disabled");
+       });
+    });
+
+    function submit() {
+        var query = $("#query-input").val();
+        if(query === "") {
+            return;
+        }
+        $("#error-alert").css("display","none");
+        $("#warning-alert").css("display","none");
+        var keyspace = $("#keyspace").val();
+        $.getJSON("/api/query?keyspace=" + keyspace + "&query=" + query, function (json) {
+            console.log(json);
+            if(!json.success) {
+                var e = $("#error-alert");
+                e.text(json.data);
+                e.css("display","block");
+                return;
+            }
+            if(json.data.length === 0) {
+                var w = $("#warning-alert");
+                w.text("The query returned no rows");
+                w.css("display","block");
+                return;
+            }
+            var first = true;
+            json.data.forEach(function (t) {
+                if(first) {
+                    Object.keys(t).forEach(function (t2) {
+                        $("#table-head").append("<th>" + t2 + "</th>");
+                    });
+                    first = false;
+                }
+                var a = "<tr>";
+                Object.keys(t).forEach(function (t2) {
+                    a += "<td>" + t[t2] + "</td>";
+                });
+                a += "</tr>";
+                $("#table-body").append(a);
+            });
+            $("#query-result").css("display", "block")
+        });
+    }
+</script>
+
