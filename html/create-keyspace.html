@@ -1,0 +1,55 @@
+<h2>Create a keyspace</h2>
+
+<form class="form">
+    <div class="form-group">
+        <label for="name">Keyspace name:</label>
+        <input type="text" class="form-control" required id="name" />
+    </div>
+    <div class="form-group">
+        <label for="strategy">Strategy:</label>
+        <select class="form-control" id="strategy">
+            <option id="op0"  selected value="0">SimpleStrategy</option>
+            <option id="op1" value="1">NetworkTopologyStrategy</option>
+        </select>
+    </div>
+    <div class="form-group" id="replication-wrapper">
+        <label for="factor">Replication factor:</label>
+        <input type="number" class="form-control" id="factor" />
+    </div>
+    <div id="network-settings" style="display:none;">
+        <div class="form-group">
+            <label for="durable-write">Durable writes:</label>
+            <select id="durable-write" class="form-control">
+                <option selected value="1">true</option>
+                <option value="0">false</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="datacenter">Datacenters: dc1:1,dc2:3,dc4:2</label>
+            <input type="text" id="datacenter" class="form-control" />
+        </div>
+    </div>
+    <div class="form-group">
+        <a href="javascript:createKeyspace();" class="btn btn-primary btn-block">Create Keyspace</a>
+    </div>
+
+</form>
+
+<script>
+    $(document).ready(function () {
+        $("#strategy").change(function() {
+            if($("#op0").attr("selected")) {
+                $("#network-settings").css("display","none");
+                $("#replication-wrapper").css("display","block");
+            } else {
+                $("#network-settings").css("display","block");
+                $("#replication-wrapper").css("display","one");
+            }
+        });
+    });
+
+    function createKeyspace() {
+
+    }
+
+</script>

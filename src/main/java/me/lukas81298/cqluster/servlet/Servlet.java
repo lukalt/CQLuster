@@ -63,6 +63,7 @@ public class Servlet {
                 return Collections.singletonMap( "SELECTED_KEYSPACE", stringStringMap.getOrDefault( "keyspace", "" ) );
             }
         } ) );
+        httpServer.createContext( "/create-keyspace", new LayoutHtmlServer( new File( "html/create-keyspace.html" ) ) );
         httpServer.createContext( "/system", new LayoutHtmlServer( new File( "html/system.html" ) ) );
         httpServer.createContext( "/system/info", new LayoutHtmlServer( new File( "html/system-info.html" ) ) );
         // api endpoints
