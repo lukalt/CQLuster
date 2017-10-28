@@ -11,6 +11,8 @@ public class MainConfig {
 
     private int port = 8167;
 
+    private boolean anonymousAccess = true;
+
     private String[] contactPoints = new String[] {
             "127.0.0.1"
     };

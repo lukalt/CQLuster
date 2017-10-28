@@ -4,3 +4,4 @@ target/
 out/
 *.class
 users.json
+groups.json

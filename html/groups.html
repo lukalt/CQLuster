@@ -1,0 +1,98 @@
+<h2>Groups</h2>
+
+<div class="row">
+    <div class="col-md-3">
+        <a href="javascript:createGroup();" style="margin-bottom: 1em !important;" class="btn btn-success btn-block">Create new Group</a>
+        <div class="list-group" id="list-group">
+
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h3>Group Permissions</h3>
+        <div id="permissions" style="overflow-y: auto !important; height: 75% !important; display:block;">
+
+        </div>
+    </div>
+</div>
+
+<script>
+    var groups = [];
+    var permissions = [];
+
+    function reload(callback) {
+        permissions = [];
+        groups = [];
+        $.getJSON("/api/groups", function (json) {
+           var data = json.data;
+           data.permissions.forEach(function (t) {
+              permissions.push(t);
+           });
+           data.groups.forEach(function (t) {
+               groups.push(t);
+           });
+           callback();
+        });
+    }
+    $(document).ready(function () {
+        reload(function () {
+            groups.forEach(function (g) {
+                var group = g.name;
+                $("#list-group").append("<a href=\"javascript:showGroup('"+group+"');\" id=\"link-" + group + "\"  class=\"list-group-item list-group-item-action\">" + group + "</a>");
+            });
+        });
+        $(".permission-check-box").click(function () {
+            alert("checked " + this.checked);
+        });
+    });
+
+    function createGroup() {
+        var name = prompt("Enter the group name","");
+        if(!name || name === "") {
+            return;
+        }
+        var err = false;
+        groups.forEach(function (t) {
+            if(t===name) {
+                err = true;
+            }
+        });
+        if(err) {
+            alert("A group with this name already exists.");
+            return;
+        }
+        $.post("/api/groups/create", {
+            name: name
+        }, function (data) {
+            console.log(data);
+        });
+    }
+
+    function showGroup(groupName) {
+        var group = null;
+        groups.forEach(function (t) {
+           if(t.name === groupName) {
+               group = t;
+           }
+        });
+        if( group === null ) {
+            return;
+        }
+
+        $("#permissions").html("");
+        $(".list-group-item").removeClass("active");
+        $("#link-" + group.name).addClass("active");
+        permissions.forEach(function (perm) {
+            var html = "<div class='row'>";
+            html += "<div class='col-md-8'><h4>" + perm.name + "</h4><p class='text-muted'>" + perm.description + "</p></div>";
+            html += "<div class='col-md-4'><div class=\"form-check\">\n" +
+                "<label class=\"form-check-label permission-check-box\">\n" +
+                "<input class=\"form-check-input permission-check-box\" data-permission=\"" + perm.name + "\" type=\"checkbox\" id=\"perm-" + perm.name + "\" value=\"\"></label>\n" +
+                "</div>";
+            $("#permissions").append(html + "</div>\n");
+        });
+        group.permissions.forEach(function (t) {
+           $("#perm-" + t).attr("checked", true);
+        });
+    }
+
+</script>

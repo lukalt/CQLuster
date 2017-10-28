@@ -22,6 +22,14 @@ public class ClusterConnection {
 
     public ClusterConnection( String[] contactPoints ) {
         this.cluster = Cluster.builder().addContactPoints( contactPoints ).build();
+        Runtime.getRuntime().addShutdownHook( new Thread( new Runnable() {
+            @Override
+            public void run() {
+                if( !cluster.isClosed() ) {
+                    cluster.close();
+                }
+            }
+        } ) );
     }
 
     public Session getSession( String keyspace ) {
