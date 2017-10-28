@@ -2,6 +2,7 @@ package me.lukas81298.cqluster;
 
 import me.lukas81298.cqluster.config.MainConfig;
 import me.lukas81298.cqluster.servlet.Servlet;
+import me.lukas81298.cqluster.user.UserManager;
 
 import java.io.IOException;
 
@@ -14,11 +15,13 @@ public class CqlCluster {
     private final MainConfig mainConfig;
     private final ClusterConnection clusterConnection;
     private final Servlet servlet;
+    private final UserManager userManager;
 
     public CqlCluster( MainConfig mainConfig ) throws IOException {
         this.mainConfig = mainConfig;
         this.clusterConnection = new ClusterConnection( mainConfig.getContactPoints() );
-        this.servlet = new Servlet( mainConfig.getPort(), clusterConnection );
+        this.userManager = new UserManager();
+        this.servlet = new Servlet( mainConfig.getPort(), clusterConnection, userManager );
     }
 
 }

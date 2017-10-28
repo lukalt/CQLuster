@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.lukas81298.cqluster.ClusterConnection;
 import me.lukas81298.cqluster.servlet.BaseRestEndpoint;
 import me.lukas81298.cqluster.servlet.RestException;
-import me.lukas81298.cqluster.servlet.Session;
+import me.lukas81298.cqluster.user.Session;
 
 import java.util.Map;
 

@@ -5,6 +5,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import me.lukas81298.cqluster.user.Session;
 import me.lukas81298.cqluster.util.SneakyThrow;
 
 import java.io.File;
@@ -69,9 +70,9 @@ public class LayoutHtmlServer implements HttpHandler {
             if( layout.contains( "{{BODY}}" ) ) {
                 layout = layout.replace( "{{BODY}}", fileSupplier.get() );
             }
-            Map<String, String> params = BaseRestEndpoint.queryToMap( httpExchange.getRequestURI().getQuery() );
+            Map<String, String> params = BaseRestEndpoint.queryToMap( httpExchange );
             if( this.parseFunction != null ) {
-                Map<String, String> apply = this.parseFunction.apply( BaseRestEndpoint.ANONYMOUS_SESSION, params );
+                Map<String, String> apply = this.parseFunction.apply( new Session( -1L ), params );
                 if( apply == null ) {
                     layout = "400 Bad Request";
                 } else {

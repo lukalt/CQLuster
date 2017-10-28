@@ -1,0 +1,184 @@
+<h2>User management</h2>
+<p>
+    <a href="javascript:openCreateModal()" class="btn btn-success btn-block">Create new user</a>
+</p>
+<table class="table table-striped table-bordered table-responsive">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>UUID</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="table">
+
+    </tbody>
+
+</table>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="changePasswordModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Enter the new password for user <span id="change-password-name"></span></p>
+                <form>
+                    <input type="hidden" id="change-password-user-id"/>
+                    <div class="form-group">
+                        <label for="newPassword">New Password:</label>
+                        <input type="password" class="form-control" required id="newPassword" />
+                    </div>
+                    <div class="form-group">
+                        <label for="repeatPassword">Repeat Password:</label>
+                        <input type="password" class="form-control" required id="repeatPassword" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-success" href="javascript:changePasswordConfirm();">Change password</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" role="dialog" id="addUserModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="alert alert-danger" id="create-user-alert" style="display:none;">
+
+                    </div>
+                    <div class="form-group">
+                        <label for="newUsername">Username</label>
+                        <input type="text" class="form-control" required id="newUsername" />
+                    </div>
+                    <div class="form-group">
+                        <label for="createPassword">Password:</label>
+                        <input type="password" class="form-control" required id="createPassword" />
+                    </div>
+                    <div class="form-group">
+                        <label for="createRepeatPassword">Repeat Password:</label>
+                        <input type="password" class="form-control" required id="createRepeatPassword" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-success" href="javascript:createUserConfirm();" id="create-user-button">Create User</a>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        loadUsers();
+    });
+
+    function createUserConfirm() {
+        var usernameField = $("#newUsername");
+        var username = usernameField.val();
+        var newPassword = $("#createPassword").val();
+        var createRepeatPassword = $("#createRepeatPassword").val();
+        if(username.length < 4) {
+            usernameField.focus();
+            return;
+        }
+        if(newPassword.length === 0 || newPassword !== createRepeatPassword) {
+            return; // password did not match
+        }
+
+        $("#create-user-button").addClass("disabled");
+        $.post("/api/users/create", {
+            username: username,
+            password: newPassword,
+            role: 'admin'
+        }, function (data) {
+            var json = JSON.parse(data);
+            if(json.success === "true") {
+                loadTableData(); // reload users
+                $("#addUserModal").modal("hide");
+            } else {
+                var alertRef = $("#create-user-alert");
+                alertRef.css("display","block");
+                alertRef.text(json.data);
+            }
+            $("#create-user-button").removeClass("disabled");
+        });
+
+    }
+
+    function openCreateModal() {
+        $("#addUserModal").modal("show");
+        $("#newUsername").val("");
+        $("#createPassword").val("");
+        $("#createRepeatPassword").val("");
+        $("#create-user-alert").css("display","none");
+    }
+
+    function changePasswordConfirm() {
+
+    }
+
+    function loadUsers() {
+        $("#table").html("");
+        $.getJSON("/api/users/list", function (json) {
+            json.data.forEach(function (t) {
+                var c = "<tr>";
+                c += "<td>" + t.name + "</td>";
+                c += "<td>" + t.uuid + "</td>";
+                c += "<td><a href='javascript:changePassword(\"" + t.uuid + "\",\" + t.name + \");'><i class=\"fa fa-key\" aria-hidden=\"true\"></i></a></td>";
+                c += "<td><a href='javascript:removeUser(\"" + t.uuid + "\");'><i class=\"fa fa-remove\" aria-hidden=\"true\"></i></a></td>";
+                $("#table").append(c + "</tr>");
+            });
+        });
+    }
+
+    function removeUser(uuid,username) {
+        if(confirm("Do you really want to delete the user " + username + "?")) {
+
+        }
+    }
+
+    function changePassword(uuid,username) {
+        $("#change-password-name").text(username);
+        $("#change-password-user-id").val(uuid);
+        $("#changePasswordModal").modal("show");
+       /* var newPassword = prompt("Enter the new password:", "");
+        if (!newPassword || newPassword === "") {
+            return;
+        }
+        var confirmPassword = prompt("Repeat the new password:", "");
+        if (!confirmPassword || confirmPassword === "") {
+            return;
+        }
+        if (confirmPassword !== newPassword) {
+            alert("The passwords did not match.");
+            return;
+        }
+        $.post("/api/users/change-password", {
+            uuid: uuid,
+            password: newPassword
+        }, function (data) {
+            var json = JSON.parse(data);
+            console.log(json);
+            loadUsers(); // reload the users table
+        });*/
+    }
+
+</script>

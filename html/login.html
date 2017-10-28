@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>CQLuster - Login</title>
+    <link href="//lukas81298.me/cdn/bap/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//lukas81298.me/cdn/bap/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="//lukas81298.me/cdn/bap/css/sb-admin.css" rel="stylesheet">
+</head>
+
+<body class="bg-dark">
+<div class="container">
+    <div class="card card-login mx-auto mt-5">
+        <div class="card-header">Login</div>
+        <div class="card-body">
+            <form>
+                <div class="alert alert-success" id="logout-alert" style="display:none;">
+                    You have been logged out successfully.
+                </div>
+                <div class="alert alert-danger" id="wrong-cred" style="display:none;">
+                    <strong>The entered username and password did not match.</strong>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input class="form-control" id="username" type="text" aria-describedby="emailHelp" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input class="form-control" id="password" type="password" placeholder="Password">
+                </div>
+                <a class="btn btn-primary btn-block" href="javascript:login();">Login</a>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="//lukas81298.me/cdn/bap/vendor/jquery/jquery.min.js"></script>
+<script src="//lukas81298.me/cdn/bap/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="//lukas81298.me/cdn/bap/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script>
+    $(document).ready(function () {
+        if(window.location.hash === "#logout") {
+            $("#logout-alert").css("display","block");
+        }
+    });
+    function login() {
+        var username = $("#username").val();
+        var password = $("#password").val();
+        $.post("/api/login", {
+            username: username,
+            password: encodeURI(password)
+        }, function(d) {
+            var json = JSON.parse(d);
+            if(json.data.success === "true") {
+                self.location = "/";
+            } else {
+                $("#wrong-cred").css("display","block");
+                var p = $("#password");
+                p.val("");
+                p.focus();
+            }
+        });
+     }
+</script>
+</body>
+
+</html>

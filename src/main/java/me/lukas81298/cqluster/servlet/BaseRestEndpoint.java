@@ -1,16 +1,22 @@
 package me.lukas81298.cqluster.servlet;
 
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import me.lukas81298.cqluster.util.JsonObjectBuilder;
+import me.lukas81298.cqluster.servlet.annotation.DisableAuth;
+import me.lukas81298.cqluster.user.Session;
+import me.lukas81298.cqluster.user.SessionManager;
+import me.lukas81298.cqluster.util.SneakyThrow;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.HttpCookie;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author lukas
@@ -19,25 +25,72 @@ import java.util.Map;
 public abstract class BaseRestEndpoint implements HttpHandler {
 
     private final static Gson gson = new Gson();
-    protected final static Session ANONYMOUS_SESSION = new Session( null );
+    private final static SessionManager sessionManager = new SessionManager();
 
-    public abstract Object execute( Session session, Map<String, String> params ) throws RestException ;
+    public abstract Object execute( Session session, Map<String, String> params ) throws RestException;
 
     @Override
     public void handle( HttpExchange httpExchange ) throws IOException {
-        Map<String, String> params = queryToMap( httpExchange.getRequestURI().getQuery() );
         try {
-            Object result = this.execute( ANONYMOUS_SESSION, params );
-            writeJson( httpExchange, new Response( true, result ), 200 );
-        } catch ( RestException e ) {
-            writeJson( httpExchange, new Response( false, e.getErrorMessage() ), e.getResponseCode() );
+            Map<String, String> params = queryToMap( httpExchange );
+            try {
+                Session session = getSession( httpExchange );
+                if( !session.isValid() && !this.getClass().isAnnotationPresent( DisableAuth.class ) ) {
+                    throw new RestException( "Access denied", 403 );
+                }
+                Object result = this.execute( session, params );
+                writeJson( httpExchange, new Response( true, result ), 200 );
+            } catch ( RestException e ) {
+                writeJson( httpExchange, new Response( false, e.getErrorMessage() ), e.getResponseCode() );
+            }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            writeRawResponse( httpExchange, "<h1>500 Internal Server Error</h1><p>Please contact the webmaster</p>", 500 );
         }
     }
 
-    protected static Map<String, String> queryToMap( String query ) {
-        if( query == null ) {
+    protected Session getSession( HttpExchange exchange ) {
+        List<HttpCookie> cookies;
+        String cookieString = exchange.getRequestHeaders().getFirst( "Cookie" );
+        if ( cookieString != null ) {
+            cookies = HttpCookie.parse( cookieString );
+        } else {
+            cookies = Collections.emptyList();
+        }
+        cookies = new ArrayList<>( cookies );
+        for ( HttpCookie cookie : cookies ) {
+            if ( cookie.getName().equals( "SESSION_ID" ) ) {
+                return sessionManager.getSession( UUID.fromString( cookie.getValue() ) );
+            }
+        }
+        UUID sessionId = UUID.randomUUID();
+        cookies.add( new HttpCookie( "SESSION_ID", sessionId.toString() ) );
+        exchange.getResponseHeaders().set( "Set-Cookie", String.join( ";", cookies.stream().map( new Function<HttpCookie, String>() {
+            @Override
+            public String apply( HttpCookie httpCookie ) {
+                return httpCookie.getName() + "=" + httpCookie.getValue() + "";
+            }
+        } ).collect( Collectors.toList() ) ) );
+        return sessionManager.getSession( sessionId );
+    }
+
+    protected static Map<String, String> queryToMap( HttpExchange httpExchange ) {
+
+        String query = null;
+        if ( httpExchange.getRequestMethod().equalsIgnoreCase( "get" ) ) {
+            query = httpExchange.getRequestURI().getQuery();
+        } else if ( httpExchange.getRequestMethod().equalsIgnoreCase( "post" ) ) {
+            try( BufferedReader reader = new BufferedReader( new InputStreamReader( httpExchange.getRequestBody(), Charsets.UTF_8 ) ) ) {
+                query = reader.readLine();
+            } catch ( IOException e ) {
+                return SneakyThrow.throwSilently( e );
+            }
+        }
+
+        if ( query == null ) {
             return Collections.emptyMap();
         }
+
         Map<String, String> result = new HashMap<>();
         for ( String param : query.split( "&" ) ) {
             String pair[] = param.split( "=" );

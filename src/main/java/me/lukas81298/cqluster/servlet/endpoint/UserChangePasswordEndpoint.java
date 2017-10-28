@@ -1,27 +1,24 @@
 package me.lukas81298.cqluster.servlet.endpoint;
 
 import lombok.RequiredArgsConstructor;
-import me.lukas81298.cqluster.ClusterConnection;
 import me.lukas81298.cqluster.servlet.BaseRestEndpoint;
 import me.lukas81298.cqluster.servlet.RestException;
 import me.lukas81298.cqluster.user.Session;
+import me.lukas81298.cqluster.user.UserManager;
 
 import java.util.Map;
 
 /**
  * @author lukas
- * @since 27.10.2017
+ * @since 28.10.2017
  */
 @RequiredArgsConstructor
-public class TablesEndpoint extends BaseRestEndpoint {
+public class UserChangePasswordEndpoint extends BaseRestEndpoint {
 
-    private final ClusterConnection clusterConnection;
+    private final UserManager userManager;
 
     @Override
     public Object execute( Session session, Map<String, String> params ) throws RestException {
-        if ( !params.containsKey( "keyspace" ) ) {
-            throw new RestException( "keyspace is not defined", 400 );
-        }
-        return this.clusterConnection.getTables( params.get( "keyspace" ) );
+        return null;
     }
 }
