@@ -34,16 +34,17 @@
         });
     }
     $(document).ready(function () {
+        tableInit();
+    });
+
+    function tableInit() {
         reload(function () {
             groups.forEach(function (g) {
                 var group = g.name;
                 $("#list-group").append("<a href=\"javascript:showGroup('"+group+"');\" id=\"link-" + group + "\"  class=\"list-group-item list-group-item-action\">" + group + "</a>");
             });
         });
-        $(".permission-check-box").click(function () {
-            alert("checked " + this.checked);
-        });
-    });
+    }
 
     function createGroup() {
         var name = prompt("Enter the group name","");
@@ -63,7 +64,12 @@
         $.post("/api/groups/create", {
             name: name
         }, function (data) {
-            console.log(data);
+            var json = JSON.parse(data);
+            if(json.success===true) {
+                tableInit();
+            } else {
+                alert(json.data);
+            }
         });
     }
 
@@ -91,7 +97,26 @@
             $("#permissions").append(html + "</div>\n");
         });
         group.permissions.forEach(function (t) {
-           $("#perm-" + t).attr("checked", true);
+            var v = $("#perm-" + t);
+            v.attr("checked", true);
+            v.change(function () {
+                var checked = $(this).checked;
+                if(checked) {
+                    group.permissions.push(t);
+                } else {
+                    var index = group.permissions.indexOf(t);
+                    if(index !== -1) {
+                        group.permissions.splice(index,1);
+                    }
+                }
+                $.post("/api/groups/permission", {
+                    permission: t,
+                    group: groupName,
+                    value: checked
+                }, function (d) {
+                    // ignored here
+                });
+            });
         });
     }
 

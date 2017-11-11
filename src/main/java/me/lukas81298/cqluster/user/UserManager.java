@@ -22,12 +22,14 @@ public class UserManager {
     private final Map<UUID, User> users = new ConcurrentHashMap<>();
     private final File file = new File( "users.json" );
     private final Gson gson = new Gson();
+    private final GroupManager groupManager;
 
     public List<User> dump() {
         return new ArrayList<>( this.users.values() );
     }
 
-    public UserManager() {
+    public UserManager( GroupManager groupManager ) {
+        this.groupManager = groupManager;
         this.load();
     }
 
@@ -66,7 +68,7 @@ public class UserManager {
             }
         } else {
             UUID uuid = UUID.randomUUID();
-            this.users.put( uuid, new User( "admin", uuid, DigestUtils.sha512Hex( "1234" ) ) );
+            this.users.put( uuid, new User( "admin", uuid, DigestUtils.sha512Hex( "1234" ), this.groupManager.getGroup( "admin" ).getUuid() ) );
             save();
         }
     }
@@ -83,7 +85,7 @@ public class UserManager {
 
     public UUID addUser( String username, String password ) {
         UUID id = UUID.randomUUID();
-        this.users.put( id, new User( username, id, DigestUtils.sha512Hex( password ) ) );
+        this.users.put( id, new User( username, id, DigestUtils.sha512Hex( password ), this.groupManager.getGroup( "admin" ).getUuid() ) );
         this.save();
         return id;
     }

@@ -5,9 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @author lukas
@@ -21,10 +19,22 @@ public class Group {
 
     private UUID uuid;
     private String name;
-    private List<String> permissions = new ArrayList<>();
+    private Set<String> permissions = new HashSet<>();
 
     public Group( UUID uuid ) {
         this.uuid = uuid;
+    }
+
+    public boolean isPermissionSet( String permission ) {
+        return this.permissions.contains( permission );
+    }
+
+    public void setPermission( String permission, boolean set ) {
+        if( set ) {
+            this.permissions.add( permission );
+        } else {
+            this.permissions.remove( permission );
+        }
     }
 
 }

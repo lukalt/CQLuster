@@ -7,6 +7,7 @@
         <tr>
             <th>Username</th>
             <th>UUID</th>
+            <th>Group</th>
             <th></th>
             <th></th>
         </tr>
@@ -72,6 +73,12 @@
                         <input type="text" class="form-control" required id="newUsername" />
                     </div>
                     <div class="form-group">
+                        <label for="groupSelect">Group</label>
+                        <select class="form-control" required id="groupSelect">
+
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="createPassword">Password:</label>
                         <input type="password" class="form-control" required id="createPassword" />
                     </div>
@@ -90,9 +97,26 @@
 </div>
 
 <script>
+
+    var groups = [];
+
     $(document).ready(function () {
-        loadUsers();
+        loadGroups(function () {
+            loadUsers();
+        });
     });
+
+    function loadGroups(callback) {
+        $.getJSON("/api/groups",function(json) {
+           json.data.groups.forEach(function (t) {
+               groups.push(t);
+           });
+           groups.forEach(function (t2) {
+                $("#groupSelect").append("<option value=\"" + t2.uuid + "\">" + t2.name +"</option>");
+           });
+           callback();
+        });
+    }
 
     function createUserConfirm() {
         var usernameField = $("#newUsername");
@@ -146,9 +170,27 @@
                 var c = "<tr>";
                 c += "<td>" + t.name + "</td>";
                 c += "<td>" + t.uuid + "</td>";
+                c += "<td><select class=\"group-select form-control\" data-user=\"" + t.uuid + "\">";
+                groups.forEach(function (t2) {
+                    if(t2.uuid === t.group) {
+                        c += "<option value=\"" + t2.uuid + "\" selected>" + t2.name +"</option>";
+                    } else {
+                        c += "<option value=\"" + t2.uuid + "\">" + t2.name +"</option>";
+                    }
+                });
+                c += "</select></td>";
                 c += "<td><a href='javascript:changePassword(\"" + t.uuid + "\",\" + t.name + \");'><i class=\"fa fa-key\" aria-hidden=\"true\"></i></a></td>";
                 c += "<td><a href='javascript:removeUser(\"" + t.uuid + "\");'><i class=\"fa fa-remove\" aria-hidden=\"true\"></i></a></td>";
                 $("#table").append(c + "</tr>");
+            });
+            $(".group-select").change(function () {
+                var group = $(this).val();
+                var user = $(this).attr("data-user");
+                $.post("/api/users/group", {
+                    group: group,
+                    user: user
+                }, function (data) {
+                })
             });
         });
     }

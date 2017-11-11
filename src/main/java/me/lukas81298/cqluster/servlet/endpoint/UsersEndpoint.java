@@ -10,6 +10,7 @@ import me.lukas81298.cqluster.user.UserManager;
 import me.lukas81298.cqluster.util.JsonObjectBuilder;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author lukas
@@ -25,7 +26,7 @@ public class UsersEndpoint extends BaseRestEndpoint {
         JsonArray array = new JsonArray();
         for ( User user : this.userManager.dump() ) {
             array.add( JsonObjectBuilder.create( "name", user.getUsername() )
-                .add( "uuid", user.getUuid().toString() ).build() );
+                .add( "uuid", user.getUuid().toString() ).add( "group", Objects.toString( user.getGroup() ) ).build() );
         }
         return array;
     }

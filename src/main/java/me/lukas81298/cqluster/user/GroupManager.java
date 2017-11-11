@@ -40,6 +40,13 @@ public class GroupManager {
         this.load();
     }
 
+    public Group addGroup( String name ) {
+        Group group = new Group( UUID.randomUUID(), name, new HashSet<>() );
+        this.groups.add( group );
+        this.byName.put( name, group );
+        save();
+        return group;
+    }
 
     public Permission getPermissionByName( String name ) {
         for ( Permission permission : this.permissions ) {
@@ -86,9 +93,9 @@ public class GroupManager {
                 e.printStackTrace();
             }
         } else {
-            this.groups.add( new Group( UUID.randomUUID(), "admin", this.permissions.stream().map( p -> p.getName() ).collect( Collectors.toList() ) ) );
+            this.groups.add( new Group( UUID.randomUUID(), "admin", this.permissions.stream().map( p -> p.getName() ).collect( Collectors.toSet() ) ) );
 
-            List<String> perm = new ArrayList<>();
+            Set<String> perm = new HashSet<>();
             perm.add( "login" );
             for ( Permission queries : this.getPermissionsByCategory( "Queries" ) ) {
                 perm.add( queries.getName() );

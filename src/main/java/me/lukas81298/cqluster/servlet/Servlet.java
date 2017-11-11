@@ -77,13 +77,15 @@ public class Servlet {
         httpServer.createContext( "/api/user-info", new UserInfoEndpoint( userManager ) );
         httpServer.createContext( "/api/login", new LoginEndpoint( userManager ) );
         httpServer.createContext( "/api/logout", new LogoutEndpoint() );
-        httpServer.createContext( "/api/test", new TestRestEndpoint() );
         httpServer.createContext( "/api/system/info", new SystemInfoEndpoint( clusterConnection ) );
         httpServer.createContext( "/api/keyspaces", new KeyspaceEndpoint( clusterConnection ) );
         httpServer.createContext( "/api/tables", new TablesEndpoint( clusterConnection ) );
         httpServer.createContext( "/api/query", new QueryEndpoint( clusterConnection ) );
         httpServer.createContext( "/api/table-structure", new TableStructureEndpoint( clusterConnection ) );
         httpServer.createContext( "/api/groups", new GroupsEndpoint( groupManager ) );
+        httpServer.createContext( "/api/groups/create", new CreateGroupEndpoint( groupManager ) );
+        httpServer.createContext( "/api/groups/permission", new GroupPermissionEndpoint( groupManager ) );
+        httpServer.createContext( "/api/users/group", new UserGroupEndpoint( groupManager, userManager ) );
 
         httpServer.createContext( "/api/users/list", new UsersEndpoint( userManager ) );
         httpServer.createContext( "/api/users/create", new CreateUserEndpoint( userManager ) );

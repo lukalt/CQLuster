@@ -24,10 +24,9 @@ public class CqlCluster {
     public CqlCluster( MainConfig mainConfig ) throws IOException {
         this.mainConfig = mainConfig;
         this.clusterConnection = new ClusterConnection( mainConfig.getContactPoints() );
-        this.userManager = new UserManager();
         this.groupManager = new GroupManager();
+        this.userManager = new UserManager( this.groupManager );
         this.servlet = new Servlet( mainConfig.getPort(), clusterConnection, userManager, groupManager );
-
     }
 
 }
