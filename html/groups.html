@@ -95,28 +95,31 @@
                 "<input class=\"form-check-input permission-check-box\" data-permission=\"" + perm.name + "\" type=\"checkbox\" id=\"perm-" + perm.name + "\" value=\"\"></label>\n" +
                 "</div>";
             $("#permissions").append(html + "</div>\n");
-        });
-        group.permissions.forEach(function (t) {
-            var v = $("#perm-" + t);
-            v.attr("checked", true);
+            var v = $("#perm-" + perm.name);
             v.change(function () {
                 var checked = $(this).checked;
                 if(checked) {
-                    group.permissions.push(t);
+                    group.permissions.push(perm.name);
                 } else {
-                    var index = group.permissions.indexOf(t);
+                    var index = group.permissions.indexOf(perm.name);
                     if(index !== -1) {
                         group.permissions.splice(index,1);
                     }
                 }
+                console.log(perm.name + ": "+ checked);
                 $.post("/api/groups/permission", {
-                    permission: t,
+                    permission: perm.name,
                     group: groupName,
                     value: checked
                 }, function (d) {
                     // ignored here
                 });
             });
+        });
+       group.permissions.forEach(function (t) {
+            console.log(t);
+            var v = $("#perm-" + t);
+            v.attr("checked", true);
         });
     }
 

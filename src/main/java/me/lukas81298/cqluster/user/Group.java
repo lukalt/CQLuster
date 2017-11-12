@@ -20,7 +20,7 @@ public class Group {
     private UUID uuid;
     private String name;
     private Set<String> permissions = new HashSet<>();
-
+    private boolean anonymous = false;
     public Group( UUID uuid ) {
         this.uuid = uuid;
     }
@@ -36,5 +36,7 @@ public class Group {
             this.permissions.remove( permission );
         }
     }
+
+
 
 }

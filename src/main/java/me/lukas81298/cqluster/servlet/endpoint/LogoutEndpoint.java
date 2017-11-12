@@ -14,7 +14,7 @@ public class LogoutEndpoint extends BaseRestEndpoint {
 
     @Override
     public Object execute( Session session, Map<String, String> params ) throws RestException {
-        session.setUser( null ); // logout
+        session.logout(); // logout
         return true;
     }
 }

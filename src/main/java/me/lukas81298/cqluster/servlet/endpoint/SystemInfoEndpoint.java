@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.lukas81298.cqluster.ClusterConnection;
 import me.lukas81298.cqluster.servlet.BaseRestEndpoint;
 import me.lukas81298.cqluster.servlet.RestException;
+import me.lukas81298.cqluster.servlet.annotation.Permission;
 import me.lukas81298.cqluster.user.Session;
 import me.lukas81298.cqluster.util.JsonObjectBuilder;
 
@@ -16,6 +17,7 @@ import java.util.Map;
  * @since 27.10.2017
  */
 @RequiredArgsConstructor
+@Permission( name = "system-info" )
 public class SystemInfoEndpoint extends BaseRestEndpoint {
 
     private final ClusterConnection clusterConnection;
@@ -25,12 +27,12 @@ public class SystemInfoEndpoint extends BaseRestEndpoint {
         JsonArray array = new JsonArray();
         for ( Host host : clusterConnection.getCluster().getMetadata().getAllHosts() ) {
             array.add( JsonObjectBuilder.create( "datacenter", host.getDatacenter() )
-                .add( "rack", host.getRack() )
-                .add( "state", host.getState() )
-                .add( "listenAddress", host.getListenAddress().getHostAddress() )
-                .add( "broadcastAddress", host.getBroadcastAddress().getHostAddress() )
-                .add( "version", host.getCassandraVersion().toString() )
-                .build() );
+                    .add( "rack", host.getRack() )
+                    .add( "state", host.getState() )
+                    .add( "listenAddress", host.getListenAddress().getHostAddress() )
+                    .add( "broadcastAddress", host.getBroadcastAddress().getHostAddress() )
+                    .add( "version", host.getCassandraVersion().toString() )
+                    .build() );
         }
         return JsonObjectBuilder.create( "version", "1.0.0" )
                 .add( "name", clusterConnection.getCluster().getClusterName() )

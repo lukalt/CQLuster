@@ -40,7 +40,8 @@ public class GroupsEndpoint extends BaseRestEndpoint {
             }
             groups.add( JsonObjectBuilder.create( "uuid", group.getUuid().toString() )
                 .add( "name", group.getName() )
-                .add( "permissions", p ).build() );
+                .add( "permissions", p )
+                .add( "anonymous", group.isAnonymous() ).build() );
         }
         object.add( "groups", groups );
         return object;

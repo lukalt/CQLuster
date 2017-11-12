@@ -41,7 +41,7 @@ public class GroupManager {
     }
 
     public Group addGroup( String name ) {
-        Group group = new Group( UUID.randomUUID(), name, new HashSet<>() );
+        Group group = new Group( UUID.randomUUID(), name, new HashSet<>(), false );
         this.groups.add( group );
         this.byName.put( name, group );
         save();
@@ -71,6 +71,15 @@ public class GroupManager {
         return this.byName.get( name );
     }
 
+    public Group getAnonymousGroup() {
+        for ( Group group : this.groups ) {
+            if( group.isAnonymous() ) {
+                return group;
+            }
+        }
+        return null;
+    }
+
     public Group getGroup( UUID uuid ) {
         for ( Group group : this.groups ) {
             if ( group.getUuid().equals( uuid ) ) {
@@ -93,14 +102,15 @@ public class GroupManager {
                 e.printStackTrace();
             }
         } else {
-            this.groups.add( new Group( UUID.randomUUID(), "admin", this.permissions.stream().map( p -> p.getName() ).collect( Collectors.toSet() ) ) );
+            this.groups.add( new Group( UUID.randomUUID(), "admin", this.permissions.stream().map( p -> p.getName() ).collect( Collectors.toSet() ), false ) );
 
             Set<String> perm = new HashSet<>();
             perm.add( "login" );
             for ( Permission queries : this.getPermissionsByCategory( "Queries" ) ) {
                 perm.add( queries.getName() );
             }
-            this.groups.add( new Group( UUID.randomUUID(), "default", perm ) );
+            this.groups.add( new Group( UUID.randomUUID(), "default", perm, false ) );
+            this.groups.add( new Group( UUID.randomUUID(), "anonymous", new HashSet<>(), true ) );
             this.save();
         }
     }

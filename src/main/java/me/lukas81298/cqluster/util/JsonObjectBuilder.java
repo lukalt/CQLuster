@@ -20,6 +20,18 @@ public class JsonObjectBuilder {
         return this;
     }
 
+    public JsonObjectBuilder add( String key, boolean value ) {
+        return add( key, Boolean.toString( value ) );
+    }
+
+    public JsonObjectBuilder add( String key, int value ) {
+        return add( key, Integer.toString( value ) );
+    }
+
+    public JsonObjectBuilder add( String key, double value ) {
+        return add( key, Double.toString( value ) );
+    }
+
     public JsonObjectBuilder add( String key, String value ) {
         this.jsonObject.addProperty( key, value );
         return this;

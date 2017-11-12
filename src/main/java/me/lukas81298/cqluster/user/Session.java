@@ -22,12 +22,15 @@ public class Session {
     private final long start;
     private final Map<String, Object> data = new ConcurrentHashMap<>();
 
+    private final transient GroupManager groupManager;
+    private final transient UserManager userManager;
+
     public boolean isAnonymous() {
         return this.userId == null;
     }
 
     public boolean isValid() {
-        return !this.isAnonymous() && !this.isExpired();
+        return !this.isExpired();
     }
 
     public boolean isExpired() {
@@ -40,6 +43,24 @@ public class Session {
 
     public void setUser( UUID uuid ) {
         this.userId = uuid;
+    }
+
+    public synchronized boolean isPermissionSet( String permission ) {
+        if( this.isAnonymous() ) {
+            Group group = this.groupManager.getAnonymousGroup();
+            if( group == null ) {
+                return false;
+            }
+            return group.isPermissionSet( permission );
+        }
+        User user = this.userManager.getUser( this.userId );
+        if( user != null && user.getGroup() != null ) {
+            Group group = this.groupManager.getGroup( user.getGroup() );
+            if( group != null ) {
+                return group.isPermissionSet( permission );
+            }
+        }
+        return false;
     }
 
 

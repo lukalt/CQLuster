@@ -5,8 +5,11 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import me.lukas81298.cqluster.servlet.annotation.DisableAuth;
+import me.lukas81298.cqluster.servlet.annotation.Permission;
+import me.lukas81298.cqluster.user.GroupManager;
 import me.lukas81298.cqluster.user.Session;
 import me.lukas81298.cqluster.user.SessionManager;
+import me.lukas81298.cqluster.user.UserManager;
 import me.lukas81298.cqluster.util.SneakyThrow;
 
 import java.io.BufferedReader;
@@ -25,7 +28,11 @@ import java.util.stream.Collectors;
 public abstract class BaseRestEndpoint implements HttpHandler {
 
     private final static Gson gson = new Gson();
-    private final static SessionManager sessionManager = new SessionManager();
+    private static SessionManager sessionManager;
+
+    public static void init( GroupManager groupManager, UserManager userManager ) {
+        sessionManager = new SessionManager( userManager, groupManager );
+    }
 
     public abstract Object execute( Session session, Map<String, String> params ) throws RestException;
 
@@ -35,8 +42,13 @@ public abstract class BaseRestEndpoint implements HttpHandler {
             Map<String, String> params = queryToMap( httpExchange );
             try {
                 Session session = getSession( httpExchange );
-                if( !session.isValid() && !this.getClass().isAnnotationPresent( DisableAuth.class ) ) {
+                if ( !session.isValid() && !this.getClass().isAnnotationPresent( DisableAuth.class ) ) {
                     throw new RestException( "Access denied", 403 );
+                }
+                if ( this.getClass().isAnnotationPresent( Permission.class ) ) {
+                    if ( !session.isPermissionSet( this.getClass().getAnnotation( Permission.class ).name() ) ) {
+                        throw new RestException( "Permission denied", 403 );
+                    }
                 }
                 Object result = this.execute( session, params );
                 writeJson( httpExchange, new Response( true, result ), 200 );
@@ -80,7 +92,7 @@ public abstract class BaseRestEndpoint implements HttpHandler {
         if ( httpExchange.getRequestMethod().equalsIgnoreCase( "get" ) ) {
             query = httpExchange.getRequestURI().getQuery();
         } else if ( httpExchange.getRequestMethod().equalsIgnoreCase( "post" ) ) {
-            try( BufferedReader reader = new BufferedReader( new InputStreamReader( httpExchange.getRequestBody(), Charsets.UTF_8 ) ) ) {
+            try ( BufferedReader reader = new BufferedReader( new InputStreamReader( httpExchange.getRequestBody(), Charsets.UTF_8 ) ) ) {
                 query = reader.readLine();
             } catch ( IOException e ) {
                 return SneakyThrow.throwSilently( e );
